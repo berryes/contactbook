@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 export class Book {
     constructor(book){
         this.created = book.created ?? Date.now()
@@ -7,6 +8,7 @@ export class Book {
     }
     addPerson(person){
         if(!this.data.people){this.data.people = []}
+        person.id = uuidv4()
         this.data.people.push(person)
         
 /*         let id = uuidv4();
