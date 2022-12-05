@@ -59,7 +59,7 @@ pub fn personCollector() -> Person{
          // LAST NAME
          println!("Lastname: ");
          input(&mut guy.lastname); // mutating temp var from console onput
-          while !&guy.lastname.trim().is_empty() { //  is not empty
+          while guy.lastname.trim().is_empty() { //  is not empty
              println!("Invalid | Lastname: ");
              input(&mut guy.lastname); // mutating back cus given shit was bad
           }
@@ -68,7 +68,7 @@ pub fn personCollector() -> Person{
         println!("Birthday (DD/MM/YYYY): ");
         input(&mut guy.birth); // mutating temp var from console onput
         let regexus = Regex::new(r#"/^[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}$/"#).unwrap(); // creating regex sample
-         while !regexus.is_match(&guy.birth) && !&guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+         while !regexus.is_match(&guy.birth) && guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
             println!("Invalid | Birthday (DD/MM/YYYY): ");
             input(&mut guy.birth); // mutating back cus given shit was bad
          }
@@ -78,7 +78,7 @@ pub fn personCollector() -> Person{
         println!("Phone number: ");
         input(&mut guy.phone); // mutating temp var from console onput
         let regexus = Regex::new(r#"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"#).unwrap(); // creating regex sample
-         while !regexus.is_match(&guy.phone) && !&guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+         while !regexus.is_match(&guy.phone) && guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
             println!("Invalid | Phone number : ");
             input(&mut guy.phone); // mutating back cus given shit was bad
          }
