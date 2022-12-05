@@ -20,9 +20,16 @@ pub fn selector() -> String{
         std::io::stdin().read_line(&mut line).unwrap();
         return line;
 }
+pub fn input(changer: &mut String) {
+    std::io::stdin().read_line(changer)
+    .ok()
+    .unwrap();
+}
 
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
+
+use regex::Regex;
 
 pub fn personCollector() -> Person{
         let rand_string: String = thread_rng()
@@ -30,26 +37,52 @@ pub fn personCollector() -> Person{
         .take(30)
         .map(char::from)
         .collect();
-        println!("{}",&rand_string);
+
         let mut guy:Person = Person { 
-            id: rand_string, 
+            id: rand_string, // assinging random string from rand_string var (gets destroyed cus its not borrowed) 
             firstname: String::new(), 
             lastname: String::new(), 
             birth: String::new(), 
             phone: String::new()
          };
 
-        println!("First name:");
-        std::io::stdin().read_line(&mut guy.firstname).unwrap();
          
-        println!("Last name:");
-        std::io::stdin().read_line(&mut guy.lastname).unwrap();
-
-        println!("Birthday:");
-        std::io::stdin().read_line(&mut guy.birth).unwrap();
+        // FIRST NAME
+        println!("First name:");
+        input(&mut guy.firstname); // mutating  var from console onput
+         while guy.firstname.trim().is_empty() { 
+            println!("Invalid | First name: ");
+            input(&mut guy.firstname); // mutating back to console input again cus given shit was bad
+         }
+         
         
-        println!("Phone number:");
-        std::io::stdin().read_line(&mut guy.phone).unwrap();
+         // LAST NAME
+         println!("Lastname: ");
+         input(&mut guy.lastname); // mutating temp var from console onput
+          while !&guy.lastname.trim().is_empty() { //  is not empty
+             println!("Invalid | Lastname: ");
+             input(&mut guy.lastname); // mutating back cus given shit was bad
+          }
+
+          // BIRTH DAY
+        println!("Birthday (DD/MM/YYYY): ");
+        input(&mut guy.birth); // mutating temp var from console onput
+        let regexus = Regex::new(r#"/^[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}$/"#).unwrap(); // creating regex sample
+         while !regexus.is_match(&guy.birth) && !&guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+            println!("Invalid | Birthday (DD/MM/YYYY): ");
+            input(&mut guy.birth); // mutating back cus given shit was bad
+         }
+
+
+         // PHONE NUMBER
+        println!("Phone number: ");
+        input(&mut guy.phone); // mutating temp var from console onput
+        let regexus = Regex::new(r#"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"#).unwrap(); // creating regex sample
+         while !regexus.is_match(&guy.phone) && !&guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+            println!("Invalid | Phone number : ");
+            input(&mut guy.phone); // mutating back cus given shit was bad
+         }
+
 
         return guy;
 }
@@ -84,9 +117,11 @@ impl connector for Database
         );
         ")).await; 
     }
+    // adds person record to db
     async fn addPerson(guy:Person){
-        let conn = SqliteConnection::connect("./database.sqlite").await;
+        let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to db
 
+        // SQL query for inserting data
         let querus = format!("
         INSERT INTO people (id,firstname,lastname,birth,phone)
         VALUES(
@@ -97,12 +132,15 @@ impl connector for Database
             '{}'
         );
         ",
+        // replacing {} to data( ex: guy.firstname = Kiss)
         guy.id,
         guy.firstname,
         guy.lastname,
         guy.birth,
         guy.phone
         );
+
+        // executing script 
         conn.expect("faul").execute(sqlx::query(&querus)).await;
     }
 } 
@@ -122,31 +160,31 @@ async fn main(){
         File::create("database.sqlite");
     };
 
-    // creating tables
+    // creating tables | or not if they already exist
     Database::InitTables().await;
 
-    // contactbook  | Vector/array of the same types (PERSON)
-    let mut people: Vec<Person> = Vec::<Person>::new();
-    let selection: String = selector();    
+    // select menu
+    let selection: String = selector(); 
 
-     match selection.as_str() {
-        "0" =>{ 
+    print!("{}",selection);
+
+    // i wasted 15 mintutes bc the fucking string contained the enter's unicode string or whatever (x\r\n) 
+    match  selection.trim() {
+        "1" =>{ // add person
+                let person:Person = personCollector(); // collecting data about the person
+                Database::addPerson(person).await;
+                println!("Person added")
+        }
+        "2" =>{ // List people
+
+        },
+        "3" =>{ // search
 
         }
-        "1" =>{ // add
-               let person:Person = personCollector();
-               Database::addPerson(person).await;
-        }
-        "2" =>{ // list
-
-        }
-        "3" =>{ // Search
-
-        }
+        _=> return
+    }
 
 
-        _ => return
-    }      
    /*  println!("{:?} -> {}",people,selection); */
 }
 
