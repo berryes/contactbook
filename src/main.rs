@@ -1,8 +1,5 @@
 #[derive(Debug)]
 
-
-
-
 pub struct Person{
     id: String,
     firstname: String,
@@ -28,7 +25,7 @@ pub fn input(changer: &mut String) {
 
 use rand::{thread_rng, Rng};
 use rand::distributions::Alphanumeric;
-
+use unicode_segmentation::UnicodeSegmentation;
 use regex::Regex;
 
 pub fn personCollector() -> Person{
@@ -46,20 +43,20 @@ pub fn personCollector() -> Person{
             phone: String::new()
          };
 
-         
         // FIRST NAME
         println!("First name:");
         input(&mut guy.firstname); // mutating  var from console onput
-         while guy.firstname.trim().is_empty() { 
-            println!("Invalid | First name: ");
+         while guy.firstname.trim().is_empty() || !(guy.firstname.graphemes(true).count() < 21) { 
+            println!("Invalid input | First name: ");
             input(&mut guy.firstname); // mutating back to console input again cus given shit was bad
          }
-         
-        
+
+
          // LAST NAME
-         println!("Lastname: ");
+         // Rules: only letters, max 20 chars
+         println!(" Lastname: ");
          input(&mut guy.lastname); // mutating temp var from console onput
-          while guy.lastname.trim().is_empty() { //  is not empty
+          while guy.lastname.trim().is_empty() || !(guy.firstname.graphemes(true).count() < 21)  { //  asks for input again if string length is over 20 or empty
              println!("Invalid | Lastname: ");
              input(&mut guy.lastname); // mutating back cus given shit was bad
           }
@@ -67,8 +64,8 @@ pub fn personCollector() -> Person{
           // BIRTH DAY
         println!("Birthday (DD/MM/YYYY): ");
         input(&mut guy.birth); // mutating temp var from console onput
-        let regexus = Regex::new(r#"/^[0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4}$/"#).unwrap(); // creating regex sample
-         while !regexus.is_match(&guy.birth) && guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+/*         let regexus = Regex::new(r"(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})").unwrap(); // creating regex sample
+ */         while /* !regexus.is_match(&guy.birth) && */ guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
             println!("Invalid | Birthday (DD/MM/YYYY): ");
             input(&mut guy.birth); // mutating back cus given shit was bad
          }
@@ -77,8 +74,8 @@ pub fn personCollector() -> Person{
          // PHONE NUMBER
         println!("Phone number: ");
         input(&mut guy.phone); // mutating temp var from console onput
-        let regexus = Regex::new(r#"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"#).unwrap(); // creating regex sample
-         while !regexus.is_match(&guy.phone) && guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+/*         let regexus = Regex::new(r#"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"#).unwrap(); // creating regex sample
+ */         while /* !regexus.is_match(&guy.phone) && */ guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
             println!("Invalid | Phone number : ");
             input(&mut guy.phone); // mutating back cus given shit was bad
          }
@@ -96,6 +93,7 @@ use async_trait::async_trait;
 trait connector { 
     async fn InitTables();
     async fn addPerson(guy:Person);
+    async fn listPeople();
 }
 
 // implementing those functions into the database structure
@@ -143,6 +141,13 @@ impl connector for Database
         // executing script 
         conn.expect("faul").execute(sqlx::query(&querus)).await;
     }
+
+    async fn listPeople(){
+        let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to  db | btw idk why im connecting to it on every acction
+        let data = conn.expect("asd").execute(sqlx::query("SELECT * FROM people")).await; // prepared, cached query
+
+        println!("{:?}",data)
+    }
 } 
 
 use std::path::Path; // fs
@@ -151,7 +156,24 @@ use sqlx::sqlite::SqliteConnection; // connection handler
 use sqlx::Executor; // for executing queries
 use std::fs::File; // for creating database.sqlite
 
-// why tf doesnt this bs lang have asnyc functions already | ISNT IT 8 YEARS OLD?!!
+
+//  MFW you have to import a 3rd party package to get async functions in this fucking language
+/* ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠛⠛⠛⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠉⠻⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⠋⠈⠀⠀⠀⠀⠐⠺⣖⢄⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡏⢀⡆⠀⠀⠀⢋⣭⣽⡚⢮⣲⠆⠀⠀⠀⠀⠀⠀⢹⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⡼⠀⠀⠀⠀⠈⠻⣅⣨⠇⠈⠀⠰⣀⣀⣀⡀⠀⢸⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣟⢷⣶⠶⣃⢀⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡅⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠀⠈⠓⠚⢸⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⢀⡠⠀⡄⣀⠀⠀⠀⢻⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠐⠉⠀⠀⠙⠉⠀⠠⡶⣸⠁⠀⣠⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣦⡆⠀⠐⠒⠢⢤⣀⡰⠁⠇⠈⠘⢶⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠠⣄⣉⣙⡉⠓⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
+⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣤⣀⣀⠀⣀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ */
+
 #[tokio::main]
 async fn main(){
 
@@ -176,7 +198,7 @@ async fn main(){
                 println!("Person added")
         }
         "2" =>{ // List people
-
+            Database::listPeople().await;
         },
         "3" =>{ // search
 

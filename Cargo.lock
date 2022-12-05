@@ -96,6 +96,7 @@ dependencies = [
  "regex",
  "sqlx",
  "tokio",
+ "unicode-segmentation",
 ]
 
 [[package]]
