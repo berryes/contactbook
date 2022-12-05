@@ -8,4 +8,8 @@ edition = "2021"
 [dependencies]
 # tui = "0.19"
 # crossterm = "0.25"
-sqlite = "0.30.2"
+# sqlite = "0.30.2"
+rand = "0.8.5"
+async-trait = "0.1.59"
+sqlx = { version = "0.6", features = [ "runtime-tokio-native-tls" , "sqlite" ] }
+tokio = { version = "1", features = ["full"] }
