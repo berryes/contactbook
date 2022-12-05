@@ -20,3 +20,15 @@ I wrote it in Rust just to get familiar with the language. I regret it.
 
 	    A tárolt adatok megjelenítése
 	    Név szerinti keresés biztosítása
+
+## How to run/build
+
+```bash
+git clone https://github.com/berryes/contactbook.git
+```
+```bash
+cd contactbook
+```
+```bash
+cargo run
+```
