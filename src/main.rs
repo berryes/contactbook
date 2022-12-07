@@ -87,22 +87,37 @@ pub fn personCollector() -> Person{
 
 struct  Database; // database "class"
 
-// traits (assigning functions)
-use async_trait::async_trait;
-#[async_trait]
 trait connector { 
-    async fn InitTables();
-    async fn addPerson(guy:Person);
-    async fn listPeople();
+     fn InitTables();
+     fn addPerson(guy:Person);
+     fn listPeople(changer: &mut Vec<Person>);
 }
 
+
+use sqlite;
+
 // implementing those functions into the database structure
-#[async_trait]
+
 impl connector for Database
     {    
        // connects to the database (sqlite file) 
-    async fn InitTables(){
-        let conn = SqliteConnection::connect("./database.sqlite").await;
+     fn InitTables(){
+        let connection = sqlite::open("./database.sqlite").unwrap();
+        let query: String  = String::from("
+        CREATE TABLE people 
+        (
+        id text, 
+        firstname text,
+        lastname text,
+        birth text,
+        phone text,
+        PRIMARY KEY(id)
+        );
+        ");
+
+       println!("{:?}", connection.execute(query));
+
+/*         let conn = SqliteConnection::connect("./database.sqlite").await;
         conn.expect("faul").execute(sqlx::query("
         CREATE TABLE people 
         (
@@ -113,14 +128,14 @@ impl connector for Database
         phone text,
         PRIMARY KEY(id)
         );
-        ")).await; 
+        ")).await;  */
     }
     // adds person record to db
-    async fn addPerson(guy:Person){
-        let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to db
-
-        // SQL query for inserting data
-        let querus = format!("
+     fn addPerson(guy:Person){
+/*         let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to db
+ */
+        // SQL query for inserting datas
+        let querus:String = format!("
         INSERT INTO people (id,firstname,lastname,birth,phone)
         VALUES(
             '{}',
@@ -138,22 +153,59 @@ impl connector for Database
         guy.phone
         );
 
+        let connection = sqlite::open("./database.sqlite").unwrap();
+        connection.execute(querus);
+
+
+/* 
+
         // executing script 
-        conn.expect("faul").execute(sqlx::query(&querus)).await;
+        conn.expect("faul").execute(sqlx::query(&querus)).await; */
     }
 
-    async fn listPeople(){
-        let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to  db | btw idk why im connecting to it on every acction
+     fn listPeople(changer: &mut Vec<Person>){
+
+        let connection = sqlite::open("./database.sqlite").unwrap();
+        connection
+            .iterate("SELECT * FROM people", |pairs| {
+
+                let mut emberke:Person = Person {
+                    id: String::new(),
+                    firstname: String::new(),
+                    lastname: String::new(),
+                    birth: String::new(),
+                    phone: String::new()
+                };
+
+                for &(name, value) in pairs.iter() {
+
+                    // pls dont look it this is ugly | https://search.berryez.xyz/search?q=rust+assign+value+to+struct+dynamically
+                   match name {
+                    "id"=>{
+                        let mut s = String::new();
+                        emberke.id = s.push_str(value);
+                    }
+                    _ => return
+                   }
+
+                    println!("{} = {}", name, value.unwrap());
+                }
+                true
+            })
+            .unwrap();
+
+/*         let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to  db | btw idk why im connecting to it on every acction
         let data = conn.expect("asd").execute(sqlx::query("SELECT * FROM people")).await; // prepared, cached query
 
-        println!("{:?}",data)
+
+        println!("{:?}",data) */
     }
 } 
 
 use std::path::Path; // fs
-use sqlx::Connection; // idfk
+/* use sqlx::Connection; // idfk
 use sqlx::sqlite::SqliteConnection; // connection handler
-use sqlx::Executor; // for executing queries
+use sqlx::Executor; // for executing queries */
 use std::fs::File; // for creating database.sqlite
 
 
@@ -174,8 +226,8 @@ use std::fs::File; // for creating database.sqlite
 ⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
 ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣤⣀⣀⠀⣀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ */
 
-#[tokio::main]
-async fn main(){
+
+fn main(){
 
     // in case database file was not generated yet
     if !Path::new("database.sqlite").exists() { 
@@ -183,7 +235,7 @@ async fn main(){
     };
 
     // creating tables | or not if they already exist
-    Database::InitTables().await;
+    Database::InitTables();
 
     // select menu
     let selection: String = selector(); 
@@ -194,11 +246,14 @@ async fn main(){
     match  selection.trim() {
         "1" =>{ // add person
                 let person:Person = personCollector(); // collecting data about the person
-                Database::addPerson(person).await;
+                Database::addPerson(person);
                 println!("Person added")
         }
         "2" =>{ // List people
-            Database::listPeople().await;
+            let mut ppl: Vec<Person> = Vec::new();
+
+            Database::listPeople(&mut ppl);
+
         },
         "3" =>{ // search
 
