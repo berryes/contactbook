@@ -1,11 +1,11 @@
 #[derive(Debug)]
 
 pub struct Person{
-    id: String,
-    firstname: String,
-    lastname: String,
-    birth: String,
-    phone: String,
+    id: String, // yDVaPGbSZA0AOe4Vr2elU6tNRLwqR9
+    firstname: String, // Kiss
+    lastname: String, // Adam
+    birth: String, // 01/05/2001
+    phone: String, // 06 55 114 783 
 }
 
 
@@ -17,16 +17,18 @@ pub fn selector() -> String{
         std::io::stdin().read_line(&mut line).unwrap();
         return line;
 }
+
 pub fn input(changer: &mut String) {
     std::io::stdin().read_line(changer)
     .ok()
     .unwrap();
 }
 
-use rand::{thread_rng, Rng};
-use rand::distributions::Alphanumeric;
-use unicode_segmentation::UnicodeSegmentation;
-use regex::Regex;
+use rand::{thread_rng, Rng}; // used for generating random string for contact IDs
+use rand::distributions::Alphanumeric; // used for converting random int to string
+use unicode_segmentation::UnicodeSegmentation; // segmentor
+use regex::Regex; // regex for validating inputs
+use sqlite; // db controller
 
 pub fn personCollector() -> Person{
         let rand_string: String = thread_rng()
@@ -94,7 +96,7 @@ trait connector {
 }
 
 
-use sqlite;
+
 
 // implementing those functions into the database structure
 
@@ -104,7 +106,7 @@ impl connector for Database
      fn InitTables(){
         let connection = sqlite::open("./database.sqlite").unwrap();
         let query: String  = String::from("
-        CREATE TABLE people 
+        CREATE TABLE IF NOT EXISTS people 
         (
         id text, 
         firstname text,
@@ -114,26 +116,13 @@ impl connector for Database
         PRIMARY KEY(id)
         );
         ");
+        connection.execute(query).expect("Failed to create table")
 
-       println!("{:?}", connection.execute(query));
-
-/*         let conn = SqliteConnection::connect("./database.sqlite").await;
-        conn.expect("faul").execute(sqlx::query("
-        CREATE TABLE people 
-        (
-        id text, 
-        firstname text,
-        lastname text,
-        birth text,
-        phone text,
-        PRIMARY KEY(id)
-        );
-        ")).await;  */
     }
+
     // adds person record to db
      fn addPerson(guy:Person){
-/*         let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to db
- */
+
         // SQL query for inserting datas
         let querus:String = format!("
         INSERT INTO people (id,firstname,lastname,birth,phone)
@@ -156,19 +145,15 @@ impl connector for Database
         let connection = sqlite::open("./database.sqlite").unwrap();
         connection.execute(querus);
 
-
-/* 
-
-        // executing script 
-        conn.expect("faul").execute(sqlx::query(&querus)).await; */
     }
 
-     fn listPeople(changer: &mut Vec<Person>){
+     fn listPeople(changer: &mut Vec<Person>){ // mutable var is given as a parameter of the func
 
         let connection = sqlite::open("./database.sqlite").unwrap();
+        
         connection
-            .iterate("SELECT * FROM people", |pairs| {
-
+            .iterate("SELECT * FROM people", |pairs| { // selecting all the records then ittarating thru it 
+                
                 let mut emberke:Person = Person {
                     id: String::new(),
                     firstname: String::new(),
@@ -180,51 +165,38 @@ impl connector for Database
                 for &(name, value) in pairs.iter() {
 
                     // pls dont look it this is ugly | https://search.berryez.xyz/search?q=rust+assign+value+to+struct+dynamically
-                   match name {
-                    "id"=>{
-                        let mut s = String::new();
-                        emberke.id = s.push_str(value);
+                    // for some reason i cant use a match case here.
+                    /// i will try to assing a value dynamicly at some point but i still cant figure it out  | it would be usefull for adding custom fields + easier to expand the program | like emberke[name] = value.unwrap().as_string()
+                
+                    if name == "id"{
+                       emberke.id = value.unwrap().to_string();
                     }
-                    _ => return
-                   }
+                    else if name == "firstname" {
+                        emberke.firstname = value.unwrap().to_string();
+                    }
+                    else if name == "lastname" {
+                        emberke.lastname = value.unwrap().to_string();
+                    }
+                    else if name == "birth" {
+                        emberke.birth = value.unwrap().to_string();
+                    }
+                    else if name == "phone" {
+                        emberke.phone = value.unwrap().to_string();
+                    }
+                } // end of FOR value
 
-                    println!("{} = {}", name, value.unwrap());
-                }
+                changer.push(emberke); // mutating changer vector by pushing emberke
+                
                 true
             })
             .unwrap();
 
-/*         let conn = SqliteConnection::connect("./database.sqlite").await; // connecting to  db | btw idk why im connecting to it on every acction
-        let data = conn.expect("asd").execute(sqlx::query("SELECT * FROM people")).await; // prepared, cached query
-
-
-        println!("{:?}",data) */
     }
 } 
 
 use std::path::Path; // fs
-/* use sqlx::Connection; // idfk
-use sqlx::sqlite::SqliteConnection; // connection handler
-use sqlx::Executor; // for executing queries */
 use std::fs::File; // for creating database.sqlite
 
-
-//  MFW you have to import a 3rd party package to get async functions in this fucking language
-/* ⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠿⠛⠛⠛⠛⠿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡿⠛⠉⠁⠀⠀⠀⠀⠀⠀⠀⠉⠻⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠘⢿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⡟⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⠋⠈⠀⠀⠀⠀⠐⠺⣖⢄⠀⠀⠀⠀⠀⠀⠀⠀⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⡏⢀⡆⠀⠀⠀⢋⣭⣽⡚⢮⣲⠆⠀⠀⠀⠀⠀⠀⢹⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⡇⡼⠀⠀⠀⠀⠈⠻⣅⣨⠇⠈⠀⠰⣀⣀⣀⡀⠀⢸⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⡇⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣟⢷⣶⠶⣃⢀⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⡅⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿⠀⠈⠓⠚⢸⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⢀⡠⠀⡄⣀⠀⠀⠀⢻⠀⠀⠀⣠⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠐⠉⠀⠀⠙⠉⠀⠠⡶⣸⠁⠀⣠⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣦⡆⠀⠐⠒⠢⢤⣀⡰⠁⠇⠈⠘⢶⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⡇⠀⠀⠀⠀⠠⣄⣉⣙⡉⠓⢀⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣷⣄⠀⠀⠀⠀⠀⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿
-⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣷⣤⣀⣀⠀⣀⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿ */
 
 
 fn main(){
@@ -253,7 +225,7 @@ fn main(){
             let mut ppl: Vec<Person> = Vec::new();
 
             Database::listPeople(&mut ppl);
-
+            println!("{:?}",ppl[0].firstname)
         },
         "3" =>{ // search
 
