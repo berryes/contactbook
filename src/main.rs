@@ -10,11 +10,37 @@ pub struct Person{
 
 fn showPPL(ppl: Vec<Person>) {
 
-    // pls dynamci sizing TODO
+    let mut rows:Vec<String> = Vec::new();
+
+    // pls dynamci sizing TODO  
         println!("Firstname        Lastname        Birthday        Phone");
         for p in ppl{
-            println!("{}        {}        {}        {}",p.firstname,p.lastname,p.birth,p.phone)
-        }
+
+            let mut asd:Vec<String> = Vec::new(); // putting data of struct into vector of strings
+            
+            asd.push(p.firstname);
+            asd.push(p.lastname);
+            asd.push(p.birth);
+            asd.push(p.phone);
+
+
+            for rowData in asd{ // going thru the list of data
+                let mut strr:String = String::new(); // temp string
+                let mut spacesNeeded  = 17 - rowData.len(); // spaces needed to get the perfect sizing
+
+                println!("before: {}",strr);
+                strr.push_str(&format!("{}", rowData));  // pushing data string
+                for i in 1..= spacesNeeded {  // adding spaces needed
+                    strr.push_str(&format!("{}", " "));
+                }
+                println!("after: {}",strr);
+
+                rows.push(strr);
+            }
+          }
+          for row in rows{
+            println!("{}",row)
+          }
 }
 /// public function named selector which returns a string (-> String)
 pub fn selector() -> String{
@@ -202,7 +228,8 @@ impl connector for Database
 } 
 
 use std::path::Path; // fs
-use std::fs::File; // for creating database.sqlite
+use std::fs::File;
+use std::vec; // for creating database.sqlite
 
 
 
