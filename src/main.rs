@@ -8,6 +8,17 @@ pub struct Person{
     phone: String, // 06 55 114 783 
 }
 
+struct termus;
+
+trait show{
+    fn table(rows:Vec<Vec<String>>,columns: Vec<String>);
+}
+impl  show for termus {
+    
+    fn table(rows:Vec<Vec<String>>,columns: Vec<String>) {
+        println!("{:?} |",rows,)
+    }
+}
 fn showPPL(ppl: Vec<Person>) {
 
     let mut rows:Vec<String> = Vec::new();
@@ -258,7 +269,19 @@ fn main(){
         "2" =>{ // List people
             let mut ppl: Vec<Person> = Vec::new();
             Database::getPeople(&mut ppl);
-            showPPL(ppl)
+            let mut rows:Vec<Vec<String>> = Vec::new(); 
+
+            for p in ppl{
+                let mut tempVec:Vec<String> = Vec::new();
+                tempVec.push(p.id);
+                tempVec.push(p.firstname);
+                tempVec.push(p.lastname);
+                tempVec.push(p.birth);
+                tempVec.push(p.phone);
+                rows.push(tempVec);
+            }
+
+            termus::table(rows, Vec::new())
         },
         "3" =>{ // search
 
