@@ -8,7 +8,14 @@ pub struct Person{
     phone: String, // 06 55 114 783 
 }
 
+fn showPPL(ppl: Vec<Person>) {
 
+    // pls dynamci sizing TODO
+        println!("Firstname        Lastname        Birthday        Phone");
+        for p in ppl{
+            println!("{}        {}        {}        {}",p.firstname,p.lastname,p.birth,p.phone)
+        }
+}
 /// public function named selector which returns a string (-> String)
 pub fn selector() -> String{
         // select menu TEMP
@@ -29,6 +36,7 @@ use rand::distributions::Alphanumeric; // used for converting random int to stri
 use unicode_segmentation::UnicodeSegmentation; // segmentor
 use regex::Regex; // regex for validating inputs
 use sqlite; // db controller
+
 
 pub fn personCollector() -> Person{
         let rand_string: String = thread_rng()
@@ -92,7 +100,7 @@ struct  Database; // database "class"
 trait connector { 
      fn InitTables();
      fn addPerson(guy:Person);
-     fn listPeople(changer: &mut Vec<Person>);
+     fn getPeople(changer: &mut Vec<Person>);
 }
 
 
@@ -147,7 +155,7 @@ impl connector for Database
 
     }
 
-     fn listPeople(changer: &mut Vec<Person>){ // mutable var is given as a parameter of the func
+     fn getPeople(changer: &mut Vec<Person>){ // mutable var is given as a parameter of the func
 
         let connection = sqlite::open("./database.sqlite").unwrap();
         
@@ -163,25 +171,24 @@ impl connector for Database
                 };
 
                 for &(name, value) in pairs.iter() {
-
                     // pls dont look it this is ugly | https://search.berryez.xyz/search?q=rust+assign+value+to+struct+dynamically
                     // for some reason i cant use a match case here.
-                    /// i will try to assing a value dynamicly at some point but i still cant figure it out  | it would be usefull for adding custom fields + easier to expand the program | like emberke[name] = value.unwrap().as_string()
+                    // i will try to assing a value dynamicly at some point but i still cant figure it out  | it would be usefull for adding custom fields + easier to expand the program | like emberke[name] = value.unwrap().as_string()
                 
                     if name == "id"{
                        emberke.id = value.unwrap().to_string();
                     }
                     else if name == "firstname" {
-                        emberke.firstname = value.unwrap().to_string();
+                        emberke.firstname = value.unwrap().to_string().replace("\r\n", "");
                     }
                     else if name == "lastname" {
-                        emberke.lastname = value.unwrap().to_string();
+                        emberke.lastname = value.unwrap().to_string().replace("\r\n", "");
                     }
                     else if name == "birth" {
-                        emberke.birth = value.unwrap().to_string();
+                        emberke.birth = value.unwrap().to_string().replace("\r\n", "");
                     }
                     else if name == "phone" {
-                        emberke.phone = value.unwrap().to_string();
+                        emberke.phone = value.unwrap().to_string().replace("\r\n", "");
                     }
                 } // end of FOR value
 
@@ -223,10 +230,8 @@ fn main(){
         }
         "2" =>{ // List people
             let mut ppl: Vec<Person> = Vec::new();
-
-            Database::listPeople(&mut ppl);
-            println!("{:?}",ppl[0].firstname)
-            
+            Database::getPeople(&mut ppl);
+            showPPL(ppl)
         },
         "3" =>{ // search
 
