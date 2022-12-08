@@ -226,6 +226,7 @@ fn main(){
 
             Database::listPeople(&mut ppl);
             println!("{:?}",ppl[0].firstname)
+            
         },
         "3" =>{ // search
 
