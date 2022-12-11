@@ -74,10 +74,12 @@ pub fn personCollector() -> Person{
           }
 
           // BIRTH DAY
-        println!("Birthday (DD/MM/YYYY): ");
+        println!("Birthday (YYYY-MM-DD): ");
         input(&mut guy.birth); // mutating temp var from console onput
-/*         let regexus = Regex::new(r"(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})").unwrap(); // creating regex sample
- */         while /* !regexus.is_match(&guy.birth) && */ guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+/*         let regexus = Regex::new(r#""^(?:(?:1[6-9]|[2-9]\d)?\d{2})(?:(?:(\/|-|\.)(?:0?[13578]|1[02])\1(?:31))|(?:(\/|-|\.)(?:0?[13-9]|1[0-2])\2(?:29|30)))$|
+        ^(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00)))(\/|-|\.)0?2\3(?:29)$|
+        ^(?:(?:1[6-9]|[2-9]\d)?\d{2})(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:0?[1-9]|1\d|2[0-8])$""#).unwrap(); // creating regex sample */
+         while /* !regexus.is_match(&guy.birth) || */ guy.birth.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
             println!("Invalid | Birthday (DD/MM/YYYY): ");
             input(&mut guy.birth); // mutating back cus given shit was bad
          }
@@ -86,8 +88,8 @@ pub fn personCollector() -> Person{
          // PHONE NUMBER
         println!("Phone number: ");
         input(&mut guy.phone); // mutating temp var from console onput
-/*         let regexus = Regex::new(r#"^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$"#).unwrap(); // creating regex sample
- */         while /* !regexus.is_match(&guy.phone) && */ guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
+        let regexus = Regex::new(r#"((?:\+?3|0)6)(?:-|\()?(\d{1,2})(?:-|\))?(\d{3})-?(\d{3,4})"#).unwrap(); // creating regex sample
+         while !regexus.is_match(&guy.phone) || guy.phone.trim().is_empty() { // checking if given string fits for the regex sample and is not empty
             println!("Invalid | Phone number : ");
             input(&mut guy.phone); // mutating back cus given shit was bad
          }
