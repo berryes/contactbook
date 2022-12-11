@@ -8,51 +8,16 @@ pub struct Person{
     phone: String, // 06 55 114 783 
 }
 
-struct termus;
 
-trait show{
-    fn table(rows:Vec<Vec<String>>,columns: Vec<String>);
-}
-impl  show for termus {
-    
-    fn table(rows:Vec<Vec<String>>,columns: Vec<String>) {
-        println!("{:?} |",rows,)
-    }
-}
 fn showPPL(ppl: Vec<Person>) {
-
-    let mut rows:Vec<String> = Vec::new();
-
     // pls dynamci sizing TODO  
+    
         println!("Firstname        Lastname        Birthday        Phone");
         for p in ppl{
-
-            let mut asd:Vec<String> = Vec::new(); // putting data of struct into vector of strings
-            
-            asd.push(p.firstname);
-            asd.push(p.lastname);
-            asd.push(p.birth);
-            asd.push(p.phone);
-
-
-            for rowData in asd{ // going thru the list of data
-                let mut strr:String = String::new(); // temp string
-                let mut spacesNeeded  = 17 - rowData.len(); // spaces needed to get the perfect sizing
-
-                println!("before: {}",strr);
-                strr.push_str(&format!("{}", rowData));  // pushing data string
-                for i in 1..= spacesNeeded {  // adding spaces needed
-                    strr.push_str(&format!("{}", " "));
-                }
-                println!("after: {}",strr);
-
-                rows.push(strr);
-            }
-          }
-          for row in rows{
-            println!("{}",row)
+            println!("{}   {}   {}   {}",p.firstname,p.lastname,p.birth,p.phone)
           }
 }
+
 /// public function named selector which returns a string (-> String)
 pub fn selector() -> String{
         // select menu TEMP
@@ -138,16 +103,16 @@ trait connector {
      fn InitTables();
      fn addPerson(guy:Person);
      fn getPeople(changer: &mut Vec<Person>);
+     fn search(query: String, mutable: &mut Vec<Person>);
 }
 
 
 
 
 // implementing those functions into the database structure
-
 impl connector for Database
     {    
-       // connects to the database (sqlite file) 
+       // connects to the database (sqlite file)  and creating tables 
      fn InitTables(){
         let connection = sqlite::open("./database.sqlite").unwrap();
         let query: String  = String::from("
@@ -179,14 +144,17 @@ impl connector for Database
             '{}'
         );
         ",
-        // replacing {} to data( ex: guy.firstname = Kiss)
-        guy.id,
-        guy.firstname,
-        guy.lastname,
-        guy.birth,
-        guy.phone
-        );
 
+
+        // replacing {} to data( ex: guy.firstname = Kiss)
+        // also trimming it cus the fuckign string contains enters
+        guy.id.trim(),
+        guy.firstname.trim(),
+        guy.lastname.trim(),
+        guy.birth.trim(),
+        guy.phone.trim()
+        );
+        
         let connection = sqlite::open("./database.sqlite").unwrap();
         connection.execute(querus);
 
@@ -216,7 +184,7 @@ impl connector for Database
                        emberke.id = value.unwrap().to_string();
                     }
                     else if name == "firstname" {
-                        emberke.firstname = value.unwrap().to_string().replace("\r\n", "");
+                        emberke.firstname = value.unwrap().to_string().replace("\r\n", "") // deleting enter or wtf that shit is;
                     }
                     else if name == "lastname" {
                         emberke.lastname = value.unwrap().to_string().replace("\r\n", "");
@@ -236,14 +204,64 @@ impl connector for Database
             .unwrap();
 
     }
+
+    fn search(query: String, mutable: &mut Vec<Person>) {
+        let connection = sqlite::open("./database.sqlite").unwrap();
+
+        let mut DBquery: String = String::new();
+
+        DBquery = format!("
+        SELECT * FROM people 
+        WHERE firstname LIKE '{}'
+        OR  lastname LIKE '{}'
+        OR  birth LIKE '{}'
+        OR phone LIKE '{}'
+        ",
+        query.trim(),
+        query.trim(),
+        query.trim(),
+        query.trim()
+        );
+            connection
+            .iterate(DBquery, |pairs| {
+                for &(name, value) in pairs.iter() {
+                    let mut emberke = Person{
+                        id:String::new(),
+                        firstname:String::new(),
+                        lastname:String::new(),
+                        birth:String::new(),
+                        phone:String::new()
+                    };
+
+                    if name == "id"{
+                        emberke.id = value.unwrap().to_string();
+                     }
+                     else if name == "firstname" {
+                         emberke.firstname = value.unwrap().to_string()
+                     }
+                     else if name == "lastname" {
+                         emberke.lastname = value.unwrap().to_string();
+                     }
+                     else if name == "birth" {
+                         emberke.birth = value.unwrap().to_string()
+                     }
+                     else if name == "phone" {
+                         emberke.phone = value.unwrap().to_string();
+                     }
+                     mutable.push(emberke)
+                }
+                true
+            })
+            .unwrap();
+            
+    }
 } 
 
 use std::path::Path; // fs
 use std::fs::File;
-use std::vec; // for creating database.sqlite
 
 
-
+// where the magic happens
 fn main(){
 
     // in case database file was not generated yet
@@ -257,33 +275,33 @@ fn main(){
     // select menu
     let selection: String = selector(); 
 
-    print!("{}",selection);
 
     // i wasted 15 mintutes bc the fucking string contained the enter's unicode string or whatever (x\r\n) 
     match  selection.trim() {
+        
         "1" =>{ // add person
                 let person:Person = personCollector(); // collecting data about the person
                 Database::addPerson(person);
                 println!("Person added")
         }
+
         "2" =>{ // List people
             let mut ppl: Vec<Person> = Vec::new();
             Database::getPeople(&mut ppl);
-            let mut rows:Vec<Vec<String>> = Vec::new(); 
-
-            for p in ppl{
-                let mut tempVec:Vec<String> = Vec::new();
-                tempVec.push(p.id);
-                tempVec.push(p.firstname);
-                tempVec.push(p.lastname);
-                tempVec.push(p.birth);
-                tempVec.push(p.phone);
-                rows.push(tempVec);
-            }
-
-            termus::table(rows, Vec::new())
+            showPPL(ppl);
         },
+
         "3" =>{ // search
+
+            // Getting input
+            println!("Search query:");
+            let mut query: String = String::new();
+            input(&mut query);
+            
+            // Declaring list of people and mutating the result into that
+            let mut people: Vec<Person> = Vec::new();
+            Database::search(query,&mut people);
+            showPPL(people); // tabling people
 
         }
         _=> return
