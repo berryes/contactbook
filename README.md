@@ -1,7 +1,7 @@
 
 # Contactbook CLI
 ###  Really small basic rust CLI app to store contacts. (school project)
-I wrote it in Rust just to get familiar with the language. I regret it. 
+I wrote it in Rust just to get familiar with the language. 
 
 
 ### The requirements given by my teacher
